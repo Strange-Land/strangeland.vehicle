@@ -1,0 +1,25 @@
+{
+  "name": "com.strangeland.vehicle",
+  "version": "1.0.0",
+  "displayName": "StrangeLand Vehicle",
+  "description": "The standard Vehicle used in StrangeLand.",
+  "unity": "6000.3",
+  "unityRelease": "8f1",
+  "keywords": [
+    "networking",
+    "multiplayer",
+    "scene management",
+    "HCI Research",
+    "strangeland"
+  ],
+  "author": {
+    "name": "StrangeLand Team"
+  },
+  "samples": [
+    {
+      "displayName": "XE Prefab",
+      "description": "Please import this Sample to load the prefab into your project. Don`t forget to add this Intractable_Object to your ConnectionAndSpawing Scritpital Object.",
+      "path": "Samples~/XE_Vehicle"
+    }
+  ]
+}
