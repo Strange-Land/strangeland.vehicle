@@ -12,8 +12,7 @@ using System.Collections.Generic;
 using Core.Networking;
 using Core.SceneEntities;
 using StrangeLand.Steering;
-
-
+using UnityEngine.InputSystem;
 
 
 public class NetworkVehicleController : InteractableObject {
@@ -150,6 +149,8 @@ public class NetworkVehicleController : InteractableObject {
         if (SteeringWheelManager.Instance == null) {
             VehicleMode = VehicleOpperationMode.KEYBOARD;
         }
+
+        i_HighBeamMyCar(false);//set opacity to 0
     }
 
 
@@ -280,8 +281,8 @@ public class NetworkVehicleController : InteractableObject {
 
             switch (VehicleMode) {
                 case VehicleOpperationMode.KEYBOARD:
-                    SteeringInput = Input.GetAxis("Horizontal");
-                    ThrottleInput = Input.GetAxis("Vertical");
+                    SteeringInput = GetAxis1D(Key.A, Key.D, Key.LeftArrow, Key.RightArrow);
+                    ThrottleInput = GetAxis1D(Key.S, Key.W, Key.DownArrow, Key.UpArrow); 
                     break;
                 case VehicleOpperationMode.STEERINGWHEEL:
                     SteeringInput = SteeringWheelManager.Instance.GetSteerInput(_participantOrder.Value);
@@ -483,6 +484,7 @@ public class NetworkVehicleController : InteractableObject {
 
     private void i_HighBeamMyCar(bool tempHighBeam) {
         if (tempHighBeam) {
+            StrangeLandLogger.Instance.LogEvent($"ParticipantOrder: {GetParticipantOrder()} StartHighBeam!");
             foreach (Material mat in _beamLightMaterialInstances) {
                 mat.SetFloat("_Opacity", 2);
             }
@@ -492,6 +494,7 @@ public class NetworkVehicleController : InteractableObject {
             }
         }
         else {
+            StrangeLandLogger.Instance.LogEvent($"ParticipantOrder: {GetParticipantOrder()} StopHighBeam!");
             foreach (Material mat in _beamLightMaterialInstances) {
                 mat.SetFloat("_Opacity", 0);
             }
@@ -510,6 +513,7 @@ public class NetworkVehicleController : InteractableObject {
 
         HonkSound.Play();
         HonkMyCarClientRpc();
+        StrangeLandLogger.Instance.LogEvent($"ParticipantOrder: {GetParticipantOrder()} Honk!");
     }
 
 
@@ -525,8 +529,36 @@ public class NetworkVehicleController : InteractableObject {
         if (IsClient)
             GetComponentInChildren<NavigationScreen>().SetDirection(Direction);
     }
+    #region collisionLog
+    private void OnCollisionEnter(Collision collision)
+    {
+        StrangeLandLogger.Instance.LogEvent($"Participant: {GetParticipantOrder()} " +
+                                            $"collided with {collision.transform.name} " +
+                                            $"at contact point {collision.contacts[0].point} " +
+                                            $"with a relative velocity of {collision.relativeVelocity} " +
+                                            $"at pos {transform.position} rot {transform.rotation}");
 
+    }
+    #endregion
+#region NewInputSystemLogic
+private static float GetAxis1D(Key neg, Key pos)
+{
+    var kb = Keyboard.current;
+    if (kb == null) return 0f;
 
+    float v = 0f;
+    if (kb[neg].isPressed) v -= 1f;
+    if (kb[pos].isPressed) v += 1f;
+    return Mathf.Clamp(v, -1f, 1f);
+}
+
+private static float GetAxis1D(Key negA, Key posA, Key negB, Key posB)
+{
+    // e.g., WASD + Arrows
+    return Mathf.Clamp(GetAxis1D(negA, posA) + GetAxis1D(negB, posB), -1f, 1f);
+}
+
+#endregion
     #region IndicatorLogic
 
     private bool LeftActive;
